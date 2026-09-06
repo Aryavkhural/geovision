@@ -1,0 +1,7 @@
+class_id,class_name,precision,recall,f1_score,support
+0,Agriculture,1.0,1.0,1.0,800
+1,Built-up,1.0,1.0,1.0,800
+2,Forest,1.0,1.0,1.0,800
+3,Water,1.0,1.0,1.0,800
+4,Wasteland,1.0,1.0,1.0,800
+5,Roads,1.0,1.0,1.0,800

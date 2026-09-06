@@ -1,0 +1,7 @@
+class_id,class_name,pixel_count,area_hectares,area_km2,percentage
+0,Agriculture,2886011,28860.11,288.601,72.15
+1,Built-up,254026,2540.26,25.403,6.35
+2,Forest,551781,5517.81,55.178,13.8
+3,Water,11300,113.0,1.13,0.28
+4,Wasteland,248296,2482.96,24.83,6.21
+5,Roads,48415,484.15,4.841,1.21

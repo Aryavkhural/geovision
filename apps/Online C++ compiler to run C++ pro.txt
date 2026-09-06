@@ -1,0 +1,43 @@
+// Online C++ compiler to run C++ program online
+#include <iostream>
+using namespace std;
+class BankAccount {
+    private:
+    string accountHolderName;
+
+int accountNumber;
+
+double balance;
+public:
+ BankAccount (){
+     accountHolderName = "Unknown";
+     accountNumber= 0;
+     balance = 0;
+ }
+ BankAccount ( string name, int accNo,double initialBalance ){
+    accountHolderName=name;
+    accountNumber=accNo;
+    balance=initialBalance;
+ }
+void deposit(double amount)
+{
+    if(amount>0){
+        balance = amount+balance;
+    }else{
+        cout <<"error"<<endl;
+    }
+    cout<<"your balance is "<<balance;
+}
+void display(){
+    cout <<"ACCOUNTHOLDERNAME:"<<accountHolderName<<endl;
+    cout <<"ACCOUNTNO.:" <<accountNumber<<endl;
+    cout <<"BALANCE:" <<balance<<endl;
+    
+}
+};
+int main() {
+   BankAccount b1("Drake",3467583,5000);
+  b1.display();
+  b1.deposit(-200);
+    return 0;
+}

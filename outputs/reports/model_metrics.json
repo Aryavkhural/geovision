@@ -1,0 +1,15 @@
+{
+    "model": "RandomForestClassifier",
+    "data_source": "Sentinel-2 Level-2A",
+    "classes": {
+        "0": "Agriculture",
+        "1": "Built-up",
+        "2": "Forest",
+        "3": "Water",
+        "4": "Wasteland",
+        "5": "Roads"
+    },
+    "overall_accuracy": 1.0,
+    "kappa_score": 1.0,
+    "training_note": "Prototype model trained from transparent spectral-rule seed labels. For operational use, replace seed labels with expert ground-truth polygons."
+}
