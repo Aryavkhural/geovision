@@ -1,0 +1,8 @@
+streamlit
+rasterio
+numpy
+pandas
+joblib
+scikit-learn
+rasterio
+requests
