@@ -12,7 +12,7 @@ from live_sentinel import get_sentinel2_live_features
 
 st.set_page_config(
     page_title="GeoVision | Geospatial Intelligence",
-    page_icon="\U0001F6F0\uFE0F",
+    page_icon="🛰️",
     layout="wide",
     initial_sidebar_state="expanded",
 )
@@ -58,6 +58,44 @@ st.markdown(
         color: #9aa0c3;
         margin-bottom: 1rem;
     }
+    .legend-card {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        min-height: 64px;
+        padding: 10px 12px;
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        border-radius: 12px;
+        background: linear-gradient(145deg, rgba(30, 41, 59, 0.96), rgba(15, 23, 42, 0.96));
+        box-shadow: 0 8px 18px rgba(0, 0, 0, 0.14);
+        margin-bottom: 0.6rem;
+    }
+    .legend-dot {
+        flex: 0 0 18px;
+        width: 18px;
+        height: 18px;
+        border: 2px solid rgba(255, 255, 255, 0.78);
+        border-radius: 50%;
+        box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.07);
+    }
+    .legend-label {
+        display: flex;
+        flex-direction: column;
+        gap: 3px;
+        line-height: 1.1;
+    }
+    .legend-label strong {
+        color: #f8fafc;
+        font-size: 0.83rem;
+        font-weight: 750;
+    }
+    .legend-label small {
+        color: #94a3b8;
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.07em;
+        text-transform: uppercase;
+    }
     </style>
     """,
     unsafe_allow_html=True,
@@ -91,6 +129,15 @@ CLASS_COLORS = {
     5: (189, 189, 189),
 }
 
+COLOR_NAMES = {
+    0: "Sunflower Yellow",
+    1: "Urban Red",
+    2: "Forest Green",
+    3: "Water Blue",
+    4: "Earth Brown",
+    5: "Road Gray",
+}
+
 
 @st.cache_data
 def load_classification_map(path_string):
@@ -114,8 +161,37 @@ def load_table(path_string):
     return pd.read_csv(path_string)
 
 
+def show_color_legend():
+    st.markdown(
+        '<div class="section-heading">Land-cover colour key</div>',
+        unsafe_allow_html=True,
+    )
+    legend_columns = st.columns(6)
+
+    for column, (class_id, class_name) in zip(legend_columns, CLASS_NAMES.items()):
+        red, green, blue = CLASS_COLORS[class_id]
+        color_name = COLOR_NAMES[class_id]
+
+        with column:
+            st.markdown(
+                f"""
+                <div class="legend-card">
+                    <span
+                        class="legend-dot"
+                        style="background: rgb({red}, {green}, {blue});"
+                    ></span>
+                    <div class="legend-label">
+                        <strong>{class_name}</strong>
+                        <small>{color_name}</small>
+                    </div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+
 # Sidebar
-st.sidebar.markdown("## \U0001F6F0\uFE0F GeoVision")
+st.sidebar.markdown("## 🛰️ GeoVision")
 st.sidebar.caption("Geospatial Intelligence Workspace")
 st.sidebar.markdown("---")
 st.sidebar.markdown("### Analysis parameters")
@@ -287,11 +363,21 @@ if run_live:
     live_map_col, live_stats_col = st.columns([1.22, 0.78], gap="large")
 
     with live_map_col:
-        st.image(rgb_map, use_container_width=True, caption=f"{location} - {window_start} to {image_end_date}")
+        st.image(
+            rgb_map,
+            use_container_width=True,
+            caption=f"{location} - {window_start} to {image_end_date}",
+        )
 
     with live_stats_col:
-        st.metric("Dominant class", dominant_live["Class"], f"{dominant_live['Share (%)']}%")
+        st.metric(
+            "Dominant class",
+            dominant_live["Class"],
+            f"{dominant_live['Share (%)']}%",
+        )
         st.dataframe(live_stats, use_container_width=True, hide_index=True)
+
+    show_color_legend()
 
 else:
     st.markdown(
@@ -307,19 +393,48 @@ else:
         classification, crs, transform = load_classification_map(str(MAP_PATH))
         rgb_classification = make_rgb_classification(classification)
 
+        for class_id, is_selected in selected_layers.items():
+            if not is_selected:
+                rgb_classification[classification == class_id] = (43, 52, 67)
+
         map_col, stats_col = st.columns([1.22, 0.78], gap="large")
 
         with map_col:
-            st.image(rgb_classification, use_container_width=True, caption="Reference classification")
+            st.image(
+                rgb_classification,
+                use_container_width=True,
+                caption="Reference classification",
+            )
 
         with stats_col:
             if AREA_STATS_PATH.exists():
-                area_stats = load_table(str(AREA_STATS_PATH))
-                st.dataframe(area_stats, use_container_width=True, hide_index=True)
+                area_stats = load_table(str(AREA_STATS_PATH)).copy()
+                rename_map = {
+                    "class_id": "Class ID",
+                    "class_name": "Class",
+                    "pixel_count": "Pixel count",
+                    "area_hectares": "Area (ha)",
+                    "area_km2": "Area (km2)",
+                    "percentage": "Share (%)",
+                }
+                area_stats.rename(columns=rename_map, inplace=True)
+
+                preferred_columns = [
+                    column
+                    for column in ["Class", "Area (ha)", "Area (km2)", "Share (%)"]
+                    if column in area_stats.columns
+                ]
+                st.dataframe(
+                    area_stats[preferred_columns] if preferred_columns else area_stats,
+                    use_container_width=True,
+                    hide_index=True,
+                )
             else:
                 st.info("Area statistics will appear after the notebook export cells have been run.")
     else:
         st.info("No reference classification map was found yet. Run the notebook pipeline once, or use the live satellite analysis in the sidebar.")
+
+    show_color_legend()
 
     st.markdown(
         '<div class="section-heading">Model evaluation</div>',
@@ -335,14 +450,24 @@ else:
             metrics = json.load(file)
 
         evaluation_col1, evaluation_col2, evaluation_col3 = st.columns(3)
-        evaluation_col1.metric("Overall accuracy", f"{float(metrics.get('overall_accuracy', 0)) * 100:.2f}%")
-        evaluation_col2.metric("Kappa score", f"{float(metrics.get('kappa_score', 0)):.3f}")
+        evaluation_col1.metric(
+            "Overall accuracy",
+            f"{float(metrics.get('overall_accuracy', 0)) * 100:.2f}%",
+        )
+        evaluation_col2.metric(
+            "Kappa score",
+            f"{float(metrics.get('kappa_score', 0)):.3f}",
+        )
         evaluation_col3.metric("Classifier", metrics.get("model", "Random Forest"))
 
         if CONFUSION_MATRIX_PATH.exists() and REPORT_PATH.exists():
             evaluation_map_col, evaluation_table_col = st.columns([1, 1], gap="large")
             with evaluation_map_col:
-                st.image(str(CONFUSION_MATRIX_PATH), caption="Confusion matrix", use_container_width=True)
+                st.image(
+                    str(CONFUSION_MATRIX_PATH),
+                    caption="Confusion matrix",
+                    use_container_width=True,
+                )
             with evaluation_table_col:
                 report_df = load_table(str(REPORT_PATH))
                 st.dataframe(report_df, use_container_width=True, hide_index=True)
@@ -363,13 +488,13 @@ else:
     application_col1, application_col2, application_col3 = st.columns(3, gap="large")
     with application_col1:
         st.markdown(
-            "**Urban planning**\\n\\nTrack built-up expansion, identify land-conversion patterns, and support infrastructure and zoning discussions."
+            "**Urban planning**\n\nTrack built-up expansion, identify land-conversion patterns, and support infrastructure and zoning discussions."
         )
     with application_col2:
         st.markdown(
-            "**Agriculture monitoring**\\n\\nEstimate agricultural extent, observe vegetation patterns, and support crop and irrigation monitoring workflows."
+            "**Agriculture monitoring**\n\nEstimate agricultural extent, observe vegetation patterns, and support crop and irrigation monitoring workflows."
         )
     with application_col3:
         st.markdown(
-            "**Environmental tracking**\\n\\nMonitor tree cover, water bodies, wasteland change, and indicators useful for conservation planning."
+            "**Environmental tracking**\n\nMonitor tree cover, water bodies, wasteland change, and indicators useful for conservation planning."
         )
