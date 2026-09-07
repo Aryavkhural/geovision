@@ -16,7 +16,7 @@ st.set_page_config(
     page_title="GeoVision | Land-cover analysis",
     page_icon="🛰️",
     layout="wide",
-    initial_sidebar_state="expanded",
+    initial_sidebar_state="collapsed",
 )
 
 st.markdown(
@@ -34,7 +34,26 @@ st.markdown(
         --sand: #d8b365;
     }
 
-    #MainMenu, footer, header {visibility: hidden;}
+   #MainMenu, footer {visibility: hidden;}
+button[data-testid="stExpandSidebarButton"] {
+    position: fixed;
+    top: 0.75rem;
+    left: 0.75rem;
+    z-index: 999999;
+    width: 2.5rem;
+    height: 2.5rem;
+    border: 1px solid rgba(143, 179, 57, 0.55);
+    border-radius: 10px;
+    background: #15283a;
+    color: #eaf1f5;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+}
+
+button[data-testid="stExpandSidebarButton"]:hover {
+    border-color: #b6d66e;
+    background: #1b3249;
+    color: #ffffff;
+}
     .block-container {
         max-width: 1540px;
         padding-top: 2rem;
